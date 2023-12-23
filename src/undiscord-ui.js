@@ -349,7 +349,7 @@ function downloadAction() {
   const messages = undiscordCore.getDiscoveredMessages();
   console.log(messages);
   const json = JSON.stringify(messages);
-  const url = 'data:application/json;base64,' + btoa(json);
+  const url = 'data:application/json;charset=utf-8,' + json;
   window.open(url, '_blank');
 }
 
