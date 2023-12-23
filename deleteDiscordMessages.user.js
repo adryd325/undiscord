@@ -375,6 +375,7 @@
                     <button id="start" class="sizeMedium danger" style="width: 150px;" title="Start the deletion process">▶︎ Delete</button>
                     <button id="stop" class="sizeMedium" title="Stop the deletion process" disabled>🛑 Stop</button>
                     <button id="clear" class="sizeMedium">Clear log</button>
+                    <button id="download" class="sizeMedium">Download Processed Messages</button>
                     <label class="row" title="Hide sensitive information on your screen for taking screenshots">
                         <input id="redact" type="checkbox" checked> Streamer mode
                     </label>
@@ -463,6 +464,7 @@
 	    iterations: 0,
 
 	    _seachResponse: null,
+	    _discoveredMessages: [],
 	    _messagesToDelete: [],
 	    _skippedMessages: [],
 	  };
@@ -492,6 +494,7 @@
 
 	      _seachResponse: null,
 	      _messagesToDelete: [],
+	      _discoveredMessages: [],
 	      _skippedMessages: [],
 	    };
 
@@ -730,6 +733,13 @@
 	    messagesToDelete = messagesToDelete.filter(msg => msg.type === 0 || (msg.type >= 6 && msg.type <= 21));
 	    messagesToDelete = messagesToDelete.filter(msg => msg.pinned ? this.options.includePinned : true);
 
+	    // I don't actually know if this will populate with existing messages, just to be safe and not fill this with
+	    // duplicates, I'll filter those out.
+	    const dedupedMessages = messagesToDelete.filter(msg => {
+	      return !this.state._discoveredMessages.some(msg2 => msg2.id === msg.id);
+	    });
+	    this.state._discoveredMessages.push(...dedupedMessages);
+
 	    // custom filter of messages
 	    try {
 	      const regex = new RegExp(this.options.pattern, 'i');
@@ -862,6 +872,10 @@
 	      `Rate Limited: ${this.stats.throttledCount} times.`,
 	      `Total time throttled: ${msToHMS(this.stats.throttledTotalTime)}.`
 	    );
+	  }
+
+	  getDiscoveredMessages() {
+	    return this.state._discoveredMessages;
 	  }
 	}
 
@@ -1298,6 +1312,7 @@ body.undiscord-pick-message.after [id^="message-content-"]:hover::after {
 	  $('button#start').onclick = startAction;
 	  $('button#stop').onclick = stopAction;
 	  $('button#clear').onclick = () => ui.logArea.innerHTML = '';
+	  $('button#download').onclick = downloadAction;
 	  $('button#getAuthor').onclick = () => $('input#authorId').value = getAuthorId();
 	  $('button#getGuild').onclick = () => {
 	    const guildId = $('input#guildId').value = getGuildId();
@@ -1520,6 +1535,15 @@ body.undiscord-pick-message.after [id^="message-content-"]:hover::after {
 	function stopAction() {
 	  console.log(PREFIX, 'stopAction');
 	  undiscordCore.stop();
+	}
+
+	function downloadAction() {
+	  console.log(PREFIX, 'downloadAction');
+	  const messages = undiscordCore.getDiscoveredMessages();
+	  console.log(messages);
+	  const json = JSON.stringify(messages);
+	  const url = 'data:application/json;base64,' + btoa(json);
+	  window.open(url, '_blank');
 	}
 
 	// ---- END Undiscord ----

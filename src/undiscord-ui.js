@@ -102,6 +102,7 @@ function initUI() {
   $('button#start').onclick = startAction;
   $('button#stop').onclick = stopAction;
   $('button#clear').onclick = () => ui.logArea.innerHTML = '';
+  $('button#download').onclick = downloadAction;
   $('button#getAuthor').onclick = () => $('input#authorId').value = getAuthorId();
   $('button#getGuild').onclick = () => {
     const guildId = $('input#guildId').value = getGuildId();
@@ -341,6 +342,15 @@ async function startAction() {
 function stopAction() {
   console.log(PREFIX, 'stopAction');
   undiscordCore.stop();
+}
+
+function downloadAction() {
+  console.log(PREFIX, 'downloadAction');
+  const messages = undiscordCore.getDiscoveredMessages();
+  console.log(messages);
+  const json = JSON.stringify(messages);
+  const url = 'data:application/json;base64,' + btoa(json);
+  window.open(url, '_blank');
 }
 
 export default initUI;

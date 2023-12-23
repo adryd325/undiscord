@@ -45,6 +45,7 @@ class UndiscordCore {
     iterations: 0,
 
     _seachResponse: null,
+    _discoveredMessages: [],
     _messagesToDelete: [],
     _skippedMessages: [],
   };
@@ -74,6 +75,7 @@ class UndiscordCore {
 
       _seachResponse: null,
       _messagesToDelete: [],
+      _discoveredMessages: [],
       _skippedMessages: [],
     };
 
@@ -312,6 +314,13 @@ class UndiscordCore {
     messagesToDelete = messagesToDelete.filter(msg => msg.type === 0 || (msg.type >= 6 && msg.type <= 21));
     messagesToDelete = messagesToDelete.filter(msg => msg.pinned ? this.options.includePinned : true);
 
+    // I don't actually know if this will populate with existing messages, just to be safe and not fill this with
+    // duplicates, I'll filter those out.
+    const dedupedMessages = messagesToDelete.filter(msg => {
+      return !this.state._discoveredMessages.some(msg2 => msg2.id === msg.id);
+    });
+    this.state._discoveredMessages.push(...dedupedMessages);
+
     // custom filter of messages
     try {
       const regex = new RegExp(this.options.pattern, 'i');
@@ -444,6 +453,10 @@ class UndiscordCore {
       `Rate Limited: ${this.stats.throttledCount} times.`,
       `Total time throttled: ${msToHMS(this.stats.throttledTotalTime)}.`
     );
+  }
+
+  getDiscoveredMessages() {
+    return this.state._discoveredMessages;
   }
 }
 
